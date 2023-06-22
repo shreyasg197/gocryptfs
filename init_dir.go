@@ -81,11 +81,23 @@ func initDir(args *argContainer) {
 	{
 		var password []byte
 		var fido2CredentialID, fido2HmacSalt []byte
+		var url string
+		var secret string
 		if args.fido2 != "" {
 			fido2CredentialID = fido2.Register(args.fido2, filepath.Base(args.cipherdir))
 			fido2HmacSalt = cryptocore.RandBytes(32)
 			password = fido2.Secret(args.fido2, fido2CredentialID, fido2HmacSalt)
 		} else {
+			if args.dsm {
+				tlog.Info.Printf("Enter Fortanix DSM config")
+				url, secret, err = readpassword.DsmTwice()
+				url = strings.TrimSuffix(url, "\n")
+				secret = strings.TrimSuffix(secret, "\n")
+				if err != nil {
+					tlog.Fatal.Println(err)
+					os.Exit(exitcodes.ReadPassword)
+				}
+			}
 			// normal password entry
 			password, err = readpassword.Twice([]string(args.extpass), []string(args.passfile))
 			if err != nil {
@@ -108,6 +120,8 @@ func initDir(args *argContainer) {
 			DeterministicNames: args.deterministic_names,
 			XChaCha20Poly1305:  args.xchacha,
 			LongNameMax:        args.longnamemax,
+			DsmUrl:             url,
+			DsmSecret:          secret,
 		})
 		if err != nil {
 			tlog.Fatal.Println(err)

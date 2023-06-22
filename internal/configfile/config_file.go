@@ -59,6 +59,11 @@ type ConfFile struct {
 	LongNameMax uint8 `json:",omitempty"`
 	// Filename is the name of the config file. Not exported to JSON.
 	filename string
+	// DSM url
+	DsmUrl string
+
+	// DSM secret
+	DsmSecret string
 }
 
 // CreateArgs exists because the argument list to Create became too long.
@@ -74,6 +79,8 @@ type CreateArgs struct {
 	DeterministicNames bool
 	XChaCha20Poly1305  bool
 	LongNameMax        uint8
+	DsmUrl             string
+	DsmSecret          string
 }
 
 // Create - create a new config with a random key encrypted with
@@ -119,6 +126,10 @@ func Create(args *CreateArgs) error {
 			CredentialID: args.Fido2CredentialID,
 			HMACSalt:     args.Fido2HmacSalt,
 		}
+	}
+	if len(args.DsmSecret) > 0 && len(args.DsmUrl) > 0 {
+		cf.DsmSecret = args.DsmSecret
+		cf.DsmUrl = args.DsmUrl
 	}
 	// Catch bugs and invalid cli flag combinations early
 	cf.ScryptObject = NewScryptKDF(args.LogN)

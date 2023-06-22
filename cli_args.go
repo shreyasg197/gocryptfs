@@ -31,7 +31,7 @@ type argContainer struct {
 	longnames, allow_other, reverse, aessiv, nonempty, raw64,
 	noprealloc, speed, hkdf, serialize_reads, hh, info,
 	sharedstorage, fsck, one_file_system, deterministic_names,
-	xchacha bool
+	xchacha, dsm bool
 	// Mount options with opposites
 	dev, nodev, suid, nosuid, exec, noexec, rw, ro, kernel_cache, acl bool
 	masterkey, mountpoint, cipherdir, cpuprofile,
@@ -151,6 +151,7 @@ func parseCliOpts(osArgs []string) (args argContainer) {
 
 	flagSet = flag.NewFlagSet(tlog.ProgramName, flag.ContinueOnError)
 	flagSet.Usage = func() {}
+	flagSet.BoolVar(&args.dsm, "dsm", false, "Enable Fortanix DSM Key Mgmt")
 	flagSet.BoolVar(&args.debug, "d", false, "")
 	flagSet.BoolVar(&args.debug, "debug", false, "Enable debug output")
 	flagSet.BoolVar(&args.fusedebug, "fusedebug", false, "Enable fuse library debug output")
