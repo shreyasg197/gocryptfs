@@ -16,9 +16,9 @@ import (
 const ENV_API string = "FORTANIX_API_KEY"
 
 type FortanixConfig struct {
-    Url         string
-    SecretName  string
-    ApiKey      string
+	Url        string
+	SecretName string
+	ApiKey     string
 }
 
 type SecretClient struct {
@@ -58,22 +58,22 @@ func GetConfig() (*FortanixConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-    fortanixConfig := FortanixConfig{
-        Url:        strings.TrimSuffix(url, "\n"),
-        SecretName: strings.TrimSuffix(secretName,"\n"),
-        ApiKey:     strings.TrimSuffix(apiKey,"\n"),
-    }
+	fortanixConfig := FortanixConfig{
+		Url:        strings.TrimSuffix(url, "\n"),
+		SecretName: strings.TrimSuffix(secretName, "\n"),
+		ApiKey:     strings.TrimSuffix(apiKey, "\n"),
+	}
 	return &fortanixConfig, nil
 }
 
-func ReadApikey() (string){
+func ReadApikey() string {
 	apiKey, err := readDsmConfigTerminal("Api Key: ")
 
 	if err != nil {
-        tlog.Fatal.Println(err)
-        os.Exit(exitcodes.DSMError)
-    }
-	return strings.TrimSuffix(apiKey,"\n")
+		tlog.Fatal.Println(err)
+		os.Exit(exitcodes.DSMError)
+	}
+	return strings.TrimSuffix(apiKey, "\n")
 }
 
 func readDsmConfigTerminal(prompt string) (string, error) {
@@ -90,22 +90,18 @@ func readDsmConfigTerminal(prompt string) (string, error) {
 	return text, nil
 }
 
-func Secret(config *FortanixConfig ) ([]byte){
-    tlog.Info.Printf("DSM Secret: Retrieving secret from DSM")
-    if !strings.Contains(config.Url, "http") {
-        tlog.Info.Println("DSM Secret: Missing protocol scheme, resuming with https")
-        config.Url = "https://" + config.Url 
-    }
-    client := newSecretClient(config.Url, config.ApiKey)
-    ctx := context.Background()
-    sobj, err:= client.GetSecretByName(&ctx, config.SecretName)
-    if err != nil {
-        tlog.Fatal.Println(err)
-        os.Exit(exitcodes.DSMError)
-    }
-    return *sobj.Value
+func Secret(config *FortanixConfig) []byte {
+	tlog.Info.Printf("DSM Secret: Retrieving secret from DSM")
+	if !strings.Contains(config.Url, "http") {
+		tlog.Info.Println("DSM Secret: Missing protocol scheme, resuming with https")
+		config.Url = "https://" + config.Url
+	}
+	client := newSecretClient(config.Url, config.ApiKey)
+	ctx := context.Background()
+	sobj, err := client.GetSecretByName(&ctx, config.SecretName)
+	if err != nil {
+		tlog.Fatal.Println(err)
+		os.Exit(exitcodes.DSMError)
+	}
+	return *sobj.Value
 }
-
-
-
-
