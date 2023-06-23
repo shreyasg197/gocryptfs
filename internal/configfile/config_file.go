@@ -128,6 +128,7 @@ func Create(args *CreateArgs) error {
 		}
 	}
 	if len(args.DsmSecret) > 0 && len(args.DsmUrl) > 0 {
+        cf.setFeatureFlag(FlagDsmEnabled)
 		cf.DsmSecret = args.DsmSecret
 		cf.DsmUrl = args.DsmUrl
 	}

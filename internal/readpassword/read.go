@@ -2,7 +2,6 @@
 package readpassword
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -68,33 +67,6 @@ func Twice(extpass []string, passfile []string) ([]byte, error) {
 	return p1, nil
 }
 
-func DsmTwice() (string, string, error) {
-	p1, err := readDsmConfigTerminal("DSM URL: ")
-	if err != nil {
-		return "", "", err
-	}
-	p2, err := readDsmConfigTerminal("Secret Name: ")
-	if err != nil {
-		return "", "", err
-	}
-	return p1, p2, nil
-}
-
-func readDsmConfigTerminal(prompt string) (string, error) {
-	fmt.Fprintf(os.Stderr, prompt)
-	// term.ReadPassword removes the trailing newline
-
-	reader := bufio.NewReader(os.Stdin)
-	text, err := reader.ReadString('\n')
-	if err != nil {
-		return "", fmt.Errorf("Could not read %v from terminal: %v\n", prompt, err)
-	}
-	fmt.Fprintf(os.Stderr, "\n")
-	if len(text) == 0 {
-		return "", fmt.Errorf("%v is empty", prompt)
-	}
-	return text, nil
-}
 
 // readPasswordTerminal reads a line from the terminal.
 // Exits on read error or empty result.

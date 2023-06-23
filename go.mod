@@ -1,9 +1,12 @@
 module github.com/rfjakob/gocryptfs/v2
 
+replace github.com/rfjakob/gocryptfs/v2/internal/fortanix => ./internal/fortanix/
+
 go 1.16
 
 require (
 	github.com/aperturerobotics/jacobsa-crypto v1.0.0
+	github.com/fortanix/sdkms-client-go v0.2.6
 	github.com/hanwen/go-fuse/v2 v2.3.0
 	github.com/moby/sys/mountinfo v0.6.2
 	github.com/pkg/xattr v0.4.3

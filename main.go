@@ -17,6 +17,7 @@ import (
 	"github.com/rfjakob/gocryptfs/v2/internal/contentenc"
 	"github.com/rfjakob/gocryptfs/v2/internal/exitcodes"
 	"github.com/rfjakob/gocryptfs/v2/internal/fido2"
+	"github.com/rfjakob/gocryptfs/v2/internal/fortanix"
 	"github.com/rfjakob/gocryptfs/v2/internal/readpassword"
 	"github.com/rfjakob/gocryptfs/v2/internal/speed"
 	"github.com/rfjakob/gocryptfs/v2/internal/tlog"
@@ -44,6 +45,18 @@ func loadConfig(args *argContainer) (masterkey []byte, cf *configfile.ConfFile, 
 			return nil, nil, exitcodes.NewErr("", exitcodes.Usage)
 		}
 		pw = fido2.Secret(args.fido2, cf.FIDO2.CredentialID, cf.FIDO2.HMACSalt)
+    }else if cf.IsFeatureFlagSet(configfile.FlagDsmEnabled) {
+        if !args.dsm {
+            tlog.Fatal.Printf("Masterkey encrypted using DSM; need to use the --dsm option.")
+            return nil, nil, exitcodes.NewErr("", exitcodes.Usage)
+        }
+        apikey := fortanix.ReadApikey()
+        config := fortanix.FortanixConfig{
+            Url: cf.DsmUrl,
+            SecretName: cf.DsmSecret,
+            ApiKey: apikey,
+        }
+        pw = fortanix.Secret(&config)
 	} else {
 		pw, err = readpassword.Once([]string(args.extpass), []string(args.passfile), "")
 		if err != nil {

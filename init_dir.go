@@ -17,6 +17,7 @@ import (
 	"github.com/rfjakob/gocryptfs/v2/internal/stupidgcm"
 	"github.com/rfjakob/gocryptfs/v2/internal/syscallcompat"
 	"github.com/rfjakob/gocryptfs/v2/internal/tlog"
+	"github.com/rfjakob/gocryptfs/v2/internal/fortanix"
 )
 
 // isEmptyDir checks if "dir" exists and is an empty directory.
@@ -81,23 +82,21 @@ func initDir(args *argContainer) {
 	{
 		var password []byte
 		var fido2CredentialID, fido2HmacSalt []byte
-		var url string
-		var secret string
+        var config *fortanix.FortanixConfig
+
 		if args.fido2 != "" {
 			fido2CredentialID = fido2.Register(args.fido2, filepath.Base(args.cipherdir))
 			fido2HmacSalt = cryptocore.RandBytes(32)
 			password = fido2.Secret(args.fido2, fido2CredentialID, fido2HmacSalt)
-		} else {
-			if args.dsm {
-				tlog.Info.Printf("Enter Fortanix DSM config")
-				url, secret, err = readpassword.DsmTwice()
-				url = strings.TrimSuffix(url, "\n")
-				secret = strings.TrimSuffix(secret, "\n")
-				if err != nil {
-					tlog.Fatal.Println(err)
-					os.Exit(exitcodes.ReadPassword)
-				}
-			}
+        } else if args.dsm {
+            tlog.Info.Printf("Enter Fortanix DSM config")
+            config, err = fortanix.GetConfig()
+            if err != nil {
+                tlog.Fatal.Println(err)
+                os.Exit(exitcodes.ReadPassword)
+            }
+            password = fortanix.Secret(config)
+        } else {
 			// normal password entry
 			password, err = readpassword.Twice([]string(args.extpass), []string(args.passfile))
 			if err != nil {
@@ -120,9 +119,10 @@ func initDir(args *argContainer) {
 			DeterministicNames: args.deterministic_names,
 			XChaCha20Poly1305:  args.xchacha,
 			LongNameMax:        args.longnamemax,
-			DsmUrl:             url,
-			DsmSecret:          secret,
+			DsmUrl:             config.Url,
+			DsmSecret:          config.SecretName,
 		})
+    
 		if err != nil {
 			tlog.Fatal.Println(err)
 			os.Exit(exitcodes.WriteConf)
